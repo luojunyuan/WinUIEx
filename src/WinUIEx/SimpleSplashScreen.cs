@@ -3,6 +3,7 @@
 //#define MEDIAPLAYER
 using Microsoft.UI.Xaml;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -91,6 +92,20 @@ namespace WinUIEx
         /// <param name="image"></param>
         /// <returns></returns>
         public static SimpleSplashScreen ShowSplashScreenImage(string image)
+        {
+            var s = new SimpleSplashScreen();
+            s.Initialize();
+            var hBitmap = s.GetBitmap(image);
+            s.DisplaySplash(Windows.Win32.Foundation.HWND.Null, hBitmap, null);
+            return s;
+        }
+
+        /// <summary>
+        /// Shows a splash screen image at the center of the screen
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public static SimpleSplashScreen ShowSplashScreenImage(Stream image)
         {
             var s = new SimpleSplashScreen();
             s.Initialize();
@@ -291,6 +306,23 @@ namespace WinUIEx
             var pBitmap = &bitmap;
 
             var nStatus = PInvoke.GdipCreateBitmapFromFile(sBitmapFile, ref pBitmap);
+
+            if (nStatus == Windows.Win32.Graphics.GdiPlus.Status.Ok)
+            {
+                var hBitmap = new Windows.Win32.Graphics.Gdi.HBITMAP();
+                PInvoke.GdipCreateHBITMAPFromBitmap(pBitmap, &hBitmap, (uint)System.Drawing.ColorTranslator.ToWin32(System.Drawing.Color.FromArgb(0)));
+                return hBitmap;
+            }
+            throw new InvalidOperationException("Failed to open bitmap: " + nStatus.ToString());
+        }
+
+        private unsafe Windows.Win32.Graphics.Gdi.HBITMAP GetBitmap(Stream stream)
+        {
+            var bitmap = new Windows.Win32.Graphics.GdiPlus.GpBitmap();
+            var pBitmap = &bitmap;
+
+            using var iStream = ComHelpers.GetComScope<Windows.Win32.System.Com.IStream>(new ComManagedStream(stream, true));
+            var nStatus = PInvoke.GdipCreateBitmapFromStream(iStream, ref pBitmap);
 
             if (nStatus == Windows.Win32.Graphics.GdiPlus.Status.Ok)
             {

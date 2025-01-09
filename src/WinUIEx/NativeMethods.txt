@@ -59,6 +59,12 @@ ReleaseDC
 GdiplusStartup
 GdiplusShutdown
 GetObject
+E_POINTER
+E_NOINTERFACE
+STATFLAG
+STG_E_*
+STGTY
+GdipCreateBitmapFromStream
 GdipCreateBitmapFromFile
 GdipCreateHBITMAPFromBitmap
 WNDCLASSEXW

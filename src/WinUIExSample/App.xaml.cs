@@ -1,13 +1,14 @@
-﻿using System;
+﻿using Microsoft.UI.Xaml;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.Json.Nodes;
-using Microsoft.UI.Xaml;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.Json.Nodes;
 using WinUIEx;
 
 namespace WinUIExSample
@@ -152,7 +153,12 @@ namespace WinUIExSample
             if (WebAuthenticator.CheckOAuthRedirectionActivation(true))
                 return;
 #if UNPACKAGED
-            var fss = SimpleSplashScreen.ShowSplashScreenImage("Assets\\SplashScreen.scale-100.png");
+            //var fss = SimpleSplashScreen.ShowSplashScreenImage("Assets\\SplashScreen.scale-100.png");
+
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = "WinUIExSample.Assets.SplashScreen.scale-100.png";
+            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            var fss = SimpleSplashScreen.ShowSplashScreenImage(stream);
 #else
             var fss = SimpleSplashScreen.ShowDefaultSplashScreen();
 #endif

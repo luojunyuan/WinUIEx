@@ -27,7 +27,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Images\**\*.jpg"/>
+    <EmbeddedResource Include="Assets\SplashScreen.scale-100.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Content Include="Images\**\*.jpg" />
     <Content Include="Images\**\*.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
