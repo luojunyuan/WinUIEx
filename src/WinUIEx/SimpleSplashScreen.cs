@@ -3,6 +3,7 @@
 //#define MEDIAPLAYER
 using Microsoft.UI.Xaml;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
@@ -52,8 +53,8 @@ namespace WinUIEx
 
             uint dpi = 96;
             var monitor = PInvoke.MonitorFromPoint(new System.Drawing.Point(0, 0), Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
-            
-            if(monitor != IntPtr.Zero)
+
+            if (monitor != IntPtr.Zero)
             {
                 PInvoke.GetDpiForMonitor(monitor, Windows.Win32.UI.HiDpi.MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out var dpiX, out var dpiy);
                 dpi = dpiX;
@@ -61,7 +62,7 @@ namespace WinUIEx
             var scale = (int)(dpi / 96d * 100);
             if (scale == 0) scale = 100;
             context.QualifierValues["Scale"] = scale.ToString();
-            var splashScreenImageResource = manager.MainResourceMap.TryGetValue("Files/" + image.Replace('\\','/'), context);
+            var splashScreenImageResource = manager.MainResourceMap.TryGetValue("Files/" + image.Replace('\\', '/'), context);
             if (splashScreenImageResource is not null && splashScreenImageResource.Kind == Microsoft.Windows.ApplicationModel.Resources.ResourceCandidateKind.FilePath)
             {
                 return SimpleSplashScreen.ShowSplashScreenImage(splashScreenImageResource.ValueAsString);
@@ -174,12 +175,12 @@ namespace WinUIEx
         {
             Windows.Win32.UI.WindowsAndMessaging.WNDCLASSEXW wcex;
             this.hBitmap = bitmap;
-            wcex.cbSize = (uint)Marshal.SizeOf(typeof(WNDCLASSEXW));
+            wcex.cbSize = (uint)Marshal.SizeOf<WNDCLASSEXW>();
             wcex.style = WNDCLASS_STYLES.CS_HREDRAW | WNDCLASS_STYLES.CS_VREDRAW | WNDCLASS_STYLES.CS_DBLCLKS;
             wcex.hbrBackground = new Windows.Win32.Graphics.Gdi.HBRUSH(COLOR_BACKGROUND + 1);
             wcex.cbClsExtra = 0;
             wcex.cbWndExtra = 0;
-            wcex.hInstance = new Windows.Win32.Foundation.HINSTANCE(Marshal.GetHINSTANCE(this.GetType().Module));
+            wcex.hInstance = new Windows.Win32.Foundation.HINSTANCE(Process.GetCurrentProcess().Handle);
             wcex.hIcon = HICON.Null;
             wcex.hCursor = HCURSOR.Null;
             wcex.lpszMenuName = null;
@@ -196,15 +197,27 @@ namespace WinUIEx
                 if (nError != 1410) //0x582 ERROR_CLASS_ALREADY_EXISTS
                     return;
             }
+
+            uint dpi = 96;
+            var monitor = PInvoke.MonitorFromPoint(new System.Drawing.Point(0, 0), Windows.Win32.Graphics.Gdi.MONITOR_FROM_FLAGS.MONITOR_DEFAULTTOPRIMARY);
+
+            if (monitor != IntPtr.Zero)
+            {
+                PInvoke.GetDpiForMonitor(monitor, Windows.Win32.UI.HiDpi.MONITOR_DPI_TYPE.MDT_EFFECTIVE_DPI, out var dpiX, out var dpiy);
+                dpi = dpiX;
+            }
+            var scale = (int)(dpi / 96d * 100);
+            if (scale == 0) scale = 100;
+
             int nWidth = 0, nHeight = 0;
             if (hBitmap != IntPtr.Zero)
             {
                 BITMAP bm;
-                PInvoke.GetObject(new DeleteObjectSafeHandle(hBitmap), Marshal.SizeOf(typeof(BITMAP)), &bm);
-                nWidth = bm.bmWidth;
-                nHeight = bm.bmHeight;
+                PInvoke.GetObject(new DeleteObjectSafeHandle(hBitmap), Marshal.SizeOf<BITMAP>(), &bm);
+                nWidth = bm.bmWidth * scale;
+                nHeight = bm.bmHeight * scale;
             }
-            
+
             hWndSplash = PInvoke.CreateWindowEx(WINDOW_EX_STYLE.WS_EX_TOOLWINDOW | WINDOW_EX_STYLE.WS_EX_LAYERED | WINDOW_EX_STYLE.WS_EX_TRANSPARENT | WINDOW_EX_STYLE.WS_EX_TOPMOST,
                 sClassName, "Win32 window", WINDOW_STYLE.WS_POPUP | WINDOW_STYLE.WS_VISIBLE, 400, 400, nWidth, nHeight, hWnd, null,
                 new DestroyIconSafeHandle(wcex.hInstance), null);
@@ -367,7 +380,7 @@ namespace WinUIEx
         {
             BITMAP bm;
             Windows.Win32.Graphics.Gdi.HBITMAP bitmap = new Windows.Win32.Graphics.Gdi.HBITMAP(hBitmap);
-            PInvoke.GetObject(new Windows.Win32.DeleteObjectSafeHandle(hBitmap), Marshal.SizeOf(typeof(BITMAP)), &bm);
+            PInvoke.GetObject(new Windows.Win32.DeleteObjectSafeHandle(hBitmap), Marshal.SizeOf<BITMAP>(), &bm);
             System.Drawing.Size sizeBitmap = new System.Drawing.Size(bm.bmWidth, bm.bmHeight);
 
             var hDCScreen = PInvoke.GetDC(Windows.Win32.Foundation.HWND.Null);
